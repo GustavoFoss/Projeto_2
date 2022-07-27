@@ -53,6 +53,19 @@ data_set = data_set.to_dict(orient='records')
 clientes.insert_many(data_set)
 data = pd.DataFrame(clientes.find())
 
+def inserindo_situacao():
+    ids_lista = clientes.distinct('_id')
+    
+    clientes.update_many({}, {
+        '$set' : {'PREVISOES' : []}
+    })
+    
+    for (i,j) in zip(y.to_list(), ids_lista):
+        clientes.update_one({'_id' : j}, {
+            '$push' : {'PREVISOES' : i}
+        })
+    
+
 ### TREINO E TESTE DOS MODELOS ###
 
 x_treino,x_teste,y_treino,y_teste = train_test_split(x, y, test_size=0.3, stratify=y)
@@ -150,9 +163,11 @@ def clustering():
     
 
 def main():
+    inserindo_situacao()
     rf()
     lr()
     mlp()
+    print("Concluido com sucesso!")
     
 
 main()
