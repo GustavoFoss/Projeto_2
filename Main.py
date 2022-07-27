@@ -28,7 +28,6 @@ data_set = data_set.dropna()
 client = MongoClient("localhost", 27017)
 clientes = client.test.create_collection('CLIENTES')
 model = client.test.create_collection('MODELOS')
-prev = client.test.create_collection('PREVISOES')
 
 #Pegando o Y
 
