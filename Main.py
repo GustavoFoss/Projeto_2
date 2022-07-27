@@ -1,6 +1,7 @@
 from sqlite3 import Date
 from turtle import update
 from matplotlib.axis import Axis
+from matplotlib.pyplot import axis
 import pandas as pd
 from pandas_profiling import ProfileReport
 from sklearn.cluster import KMeans
@@ -27,6 +28,7 @@ data_set = data_set.dropna()
 client = MongoClient("localhost", 27017)
 clientes = client.test.create_collection('CLIENTES')
 model = client.test.create_collection('MODELOS')
+prev = client.test.create_collection('PREVISOES')
 
 #Pegando o Y
 
@@ -95,13 +97,6 @@ def modelos_banco(mod) :
     model.insert_one({
         'MODELO' : str(mod.__class__)  
         })
-    
-
-def inserir_situacao():
-    clientes.update_many({}, {
-        '$set' : {'SITUACAO' : [y]}
-    })
-    
 
 def rf():
     print()
@@ -156,7 +151,6 @@ def clustering():
     
 
 def main():
-    inserir_situacao()
     rf()
     lr()
     mlp()
