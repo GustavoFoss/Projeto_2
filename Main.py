@@ -28,6 +28,7 @@ data_set = data_set.dropna()
 client = MongoClient("localhost", 27017)
 clientes = client.test.create_collection('CLIENTES')
 model = client.test.create_collection('MODELOS')
+data_set = data_set.drop(['CD_ASSOCIADO','CODIGO_BENEFICIARIO','REALIZOU_EXODONTIA_COBERTA','REALIZOU_ENDODONTIA_COBERTA', 'A006_REGISTRO_ANS','A006_NM_PLANO','CD_USUARIO','CLIENTE','FORMA_PGTO_MENSALIDADE','QTDE_ATO_N_COBERTO_EXECUTADO','QTDE_ATENDIMENTOS'], axis=1)
 
 #Pegando o Y
 
@@ -39,19 +40,18 @@ dici_trad = {
 y =  y.replace(dici_trad)
 y = pd.Series(y)
 
+#Pegando o X
+
+dummies = pd.get_dummies(data_set[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
+num = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','SITUACAO'], axis=1)
+x = pd.concat([dummies, num], axis=1)
+
 #Inserindo no mongoDB
 
-data_set = data_set.drop(['CD_ASSOCIADO','CODIGO_BENEFICIARIO','REALIZOU_EXODONTIA_COBERTA','REALIZOU_ENDODONTIA_COBERTA', 'A006_REGISTRO_ANS','A006_NM_PLANO','CD_USUARIO','CLIENTE','FORMA_PGTO_MENSALIDADE','QTDE_ATO_N_COBERTO_EXECUTADO','QTDE_ATENDIMENTOS','SITUACAO'], axis=1)
+data_set = data_set.drop('SITUACAO', axis=1)
 data_set = data_set.to_dict(orient='records')
 clientes.insert_many(data_set)
 data = pd.DataFrame(clientes.find())
-
-#Pegando o X
-
-dummies = pd.get_dummies(data[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
-num = data.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','_id'], axis=1)
-x = pd.concat([dummies, num], axis=1)
-
 
 ### TREINO E TESTE DOS MODELOS ###
 
@@ -104,7 +104,7 @@ def rf():
     rf.fit(x_treino, y_treino)
     p = rf.predict(x_teste)
     modelos_banco(rf)
-    view_score(y_teste,p,mod=rf)
+    #view_score(y_teste,p,mod=rf)#
     return rf
     
     
@@ -116,7 +116,7 @@ def lr():
     lr.fit(x_treino,y_treino)
     p2 = lr.predict(x_teste)
     modelos_banco(lr)
-    view_score(y_teste,p2,mod=lr)
+    #view_score(y_teste,p2,mod=lr)#
     return lr
     
     
@@ -128,7 +128,7 @@ def mlp():
     mlp.fit(x_treino,y_treino)
     p3 = mlp.predict(x_teste)
     modelos_banco(mlp)
-    view_score(y_teste, p3,mod=mlp)
+    #view_score(y_teste, p3,mod=mlp)#
     print()
     return mlp
 
