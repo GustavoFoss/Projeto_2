@@ -1,9 +1,7 @@
-from sqlite3 import Date
-from turtle import update
-from matplotlib.axis import Axis
-from matplotlib.pyplot import axis
 import pandas as pd
 from pandas_profiling import ProfileReport
+from requests import post
+from bson import ObjectId
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import Normalizer
 from sklearn.metrics import accuracy_score
@@ -17,17 +15,18 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import cross_validate
 from sklearn.model_selection import StratifiedKFold
-from flask import Flask
-from flask_restful import Api, Resource
+from flask import Flask,request,jsonify
 import warnings
+
+app = Flask(__name__)
 
 warnings.filterwarnings('ignore')
 np.random.seed = 3050
 data_set = pd.read_csv('dataset_customer_churn.csv', sep='^')
 data_set = data_set.dropna()
 client = MongoClient("localhost", 27017)
-clientes = client.test.create_collection('CLIENTES')
-model = client.test.create_collection('MODELOS')
+clientes = client.test.get_collection('CLIENTES')
+model = client.test.get_collection('MODELOS')
 data_set = data_set.drop(['CD_ASSOCIADO','CODIGO_BENEFICIARIO','REALIZOU_EXODONTIA_COBERTA','REALIZOU_ENDODONTIA_COBERTA', 'A006_REGISTRO_ANS','A006_NM_PLANO','CD_USUARIO','CLIENTE','FORMA_PGTO_MENSALIDADE','QTDE_ATO_N_COBERTO_EXECUTADO','QTDE_ATENDIMENTOS'], axis=1)
 
 #Pegando o Y
@@ -163,11 +162,23 @@ def clustering():
     
 
 def main():
-    inserindo_situacao()
     rf()
     lr()
     mlp()
     print("Concluido com sucesso!")
-    
 
 main()
+
+@app.route('/busca/', methods=['POST'])
+def busca():
+    req = request.get_json()
+    dado = req["_id"]
+    pessoa = clientes.find({"_id" : ObjectId(dado)})
+    pessoa["_id"] = str(pessoa["_id"])
+    return jsonify(pessoa["PREVISOES"])
+
+@app.route('/')
+def home() :
+    return "Api para projeto 2"
+
+app.run(debug=True)
