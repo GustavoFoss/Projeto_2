@@ -1,4 +1,7 @@
 from multiprocessing.dummy import DummyProcess
+from multiprocessing.sharedctypes import Value
+from optparse import Values
+from pydoc import cli
 import pandas as pd
 from bson import ObjectId
 from sklearn.cluster import KMeans
@@ -16,6 +19,8 @@ from sklearn.model_selection import cross_validate
 from sklearn.model_selection import StratifiedKFold
 from flask import Flask,request,jsonify
 import warnings
+
+from visions import Object
 
 app = Flask(__name__)
 
@@ -48,6 +53,11 @@ def x():
     num = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','SITUACAO'], axis=1)
     return pd.concat([dummies, num], axis=1)
 x = x()
+
+def separando_x(data_set):
+    dummy = pd.get_dummies(data_set[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
+    numeros = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','PREVISOES'], axis=1)
+    return pd.concat([dummy, numeros], axis=1)
 
 #Inserindo no mongoDB
 def populando_banco():
@@ -184,6 +194,7 @@ def home() :
 
 @app.route('/adicionar/', methods=['POST'])
 def adicionar_pred():
+    print("Adicionando...")
     mod1 = rf()
     mod2 = lr()
     mod3 = mlp()
@@ -194,24 +205,44 @@ def adicionar_pred():
         'DIAS_ATE_REALIZAR_ALTO_CUSTO' : input[1],
         'ESTADO_CIVIL' : input[2],
         'IDADE' : input[3],
-        'PREVISOES' : [],
         'NUM_BENEFICIARIOS_FAMILIA' : input[4],
         'PLANO' : input[5],
+        'PREVISOES' : [],
         'QTDE_ATO_COBERTO_EXECUTADO' : input[6],
         'QTDE_DIAS_ATIVO' : input[7],
         'REALIZOU_PROCEDIMEN_ALTO_CUSTO' : input[8],
         'SEXO' : input[9]
     })
     
-    input = pd.DataFrame(pessoa)
-    input = pd.get_dummies(input)
-    
-    clientes.find_one_and_update({pessoa}, {
-        '$push' : {
-            'PREVISOES' : [mod1.predict(input), mod2.predict(input),mod3.predict(input)]
-        }
+    pessoa = clientes.find_one({
+        'CODIGO_FORMA_PGTO_MENSALIDADE' : input[0],
+        'DIAS_ATE_REALIZAR_ALTO_CUSTO' : input[1],
+        'ESTADO_CIVIL' : input[2],
+        'IDADE' : input[3],
+        'NUM_BENEFICIARIOS_FAMILIA' : input[4],
+        'PLANO' : input[5],
+        'PREVISOES' : [],
+        'QTDE_ATO_COBERTO_EXECUTADO' : input[6],
+        'QTDE_DIAS_ATIVO' : input[7],
+        'REALIZOU_PROCEDIMEN_ALTO_CUSTO' : input[8],
+        'SEXO' : input[9]
     })
-    pessoa['_id'] = str(pessoa['_id'])
-    return jsonify(pessoa)
+    
+    data = pd.DataFrame(list(clientes.find()))
+    data = data.drop("_id", axis=1)
+    data = list(separando_x(data).iloc[-1])
+    data.extend((np.zeros(34)))
+    pred1 = mod1.predict([data])
+    pred2 = mod2.predict([data])
+    pred3 = mod3.predict([data])
+    resultados = [int(pred1[0]),int(pred2[0]),int(pred3[0])]
+    clientes.find_one_and_update({"_id" : ObjectId(pessoa['_id'])}, {
+       '$push' : {
+          'PREVISOES' : {'$each' : resultados }
+       }
+    })
+    
+    return jsonify(pessoa_adicionada = str(pessoa["_id"]))
 
 app.run(debug=True)
+
