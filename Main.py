@@ -201,7 +201,7 @@ def adicionar_pred():
         'SEXO' : input[9]
     })
     
-    input = pd.DataFrame()
+    input = pd.DataFrame(pessoa)
     input = pd.get_dummies(input)
     
     clientes.find_one_and_update({pessoa}, {
