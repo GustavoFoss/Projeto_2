@@ -5,6 +5,9 @@
 #####  PyMongo
 #####  MongoDb
 #####  Flask
+#####  Pandas
+#####  Bson
+#####  numpy
 
 # Como utilizar
 
