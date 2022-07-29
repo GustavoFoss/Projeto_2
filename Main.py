@@ -1,6 +1,5 @@
+from logging import exception
 import pandas as pd
-from pandas_profiling import ProfileReport
-from requests import post
 from bson import ObjectId
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import Normalizer
@@ -110,39 +109,31 @@ def modelos_banco(mod) :
         })
 
 def rf():
-    print()
     print("Random Forest Classifier")
     rf = RandomForestClassifier(max_depth=3, n_estimators=10)
     rf.fit(x_treino, y_treino)
-    p = rf.predict(x_teste)
-    modelos_banco(rf)
-    #view_score(y_teste,p,mod=rf)#
     return rf
     
     
 def lr():
-    print()
     print("Logistic Regression")
-    print()
     lr = LogisticRegression(max_iter=50)
     lr.fit(x_treino,y_treino)
-    p2 = lr.predict(x_teste)
-    modelos_banco(lr)
-    #view_score(y_teste,p2,mod=lr)#
     return lr
     
     
 def mlp():
-    print()
     print("MLP Classifier")
-    print()
     mlp = MLPClassifier(max_iter=3)
     mlp.fit(x_treino,y_treino)
-    p3 = mlp.predict(x_teste)
-    modelos_banco(mlp)
-    #view_score(y_teste, p3,mod=mlp)#
-    print()
     return mlp
+
+
+def add_modelos_ao_banco():
+    modelos_banco(rf())
+    modelos_banco(lr())
+    modelos_banco(mlp())
+
 
 def clustering():
     print()
@@ -162,9 +153,7 @@ def clustering():
     
 
 def main():
-    rf()
-    lr()
-    mlp()
+    print("Iniciando...")
     print("Concluido com sucesso!")
 
 main()
@@ -173,9 +162,12 @@ main()
 def busca():
     req = request.get_json()
     dado = req["_id"]
-    pessoa = clientes.find({"_id" : ObjectId(dado)})
+    try :
+        pessoa = clientes.find_one({"_id" : ObjectId(dado)})
+    except :
+        return jsonify(nao_consegui_achar = str(dado))
     pessoa["_id"] = str(pessoa["_id"])
-    return jsonify(pessoa["PREVISOES"])
+    return jsonify(previsoes = pessoa["PREVISOES"])
 
 @app.route('/')
 def home() :
