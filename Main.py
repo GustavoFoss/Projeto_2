@@ -41,7 +41,6 @@ def y():
     return pd.Series(y)
 y = y()
 
-
 #Pegando o X
 
 def x():
@@ -165,6 +164,7 @@ def main():
 
 main()
 
+
 @app.route('/busca/', methods=['POST'])
 def busca():
     req = request.get_json()
@@ -176,9 +176,11 @@ def busca():
     pessoa["_id"] = str(pessoa["_id"])
     return jsonify(previsoes = pessoa["PREVISOES"])
 
+
 @app.route('/')
 def home() :
     return "Api para projeto 2"
+
 
 @app.route('/adicionar/', methods=['POST'])
 def adicionar_pred():
