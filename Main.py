@@ -1,4 +1,4 @@
-from logging import exception
+from multiprocessing.dummy import DummyProcess
 import pandas as pd
 from bson import ObjectId
 from sklearn.cluster import KMeans
@@ -27,30 +27,37 @@ client = MongoClient("localhost", 27017)
 clientes = client.test.get_collection('CLIENTES')
 model = client.test.get_collection('MODELOS')
 data_set = data_set.drop(['CD_ASSOCIADO','CODIGO_BENEFICIARIO','REALIZOU_EXODONTIA_COBERTA','REALIZOU_ENDODONTIA_COBERTA', 'A006_REGISTRO_ANS','A006_NM_PLANO','CD_USUARIO','CLIENTE','FORMA_PGTO_MENSALIDADE','QTDE_ATO_N_COBERTO_EXECUTADO','QTDE_ATENDIMENTOS'], axis=1)
+colunas = ['CODIGO_FORMA_PGTO_MENSALIDADE','DIAS_ATE_REALIZAR_ALTO_CUSTO','ESTADO_CIVIL','IDADE','NUM_BENEFICIARIOS_FAMILIA','PLANO','QTDE_ATO_COBERTO_EXECUTADO','QTDE_DIAS_ATIVO','REALIZOU_PROCEDIMEN_ALTO_CUSTO','SEXO']
 
 #Pegando o Y
 
-y = data_set['SITUACAO']
-dici_trad = {
-    'DESATIVADO' : 0,
-    'ATIVO':1
-}
-y =  y.replace(dici_trad)
-y = pd.Series(y)
+def y():
+    y = data_set['SITUACAO']
+    dici_trad = {
+        'DESATIVADO' : 0,
+        'ATIVO':1
+    }
+    y =  y.replace(dici_trad)
+    return pd.Series(y)
+y = y()
+
 
 #Pegando o X
 
-dummies = pd.get_dummies(data_set[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
-num = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','SITUACAO'], axis=1)
-x = pd.concat([dummies, num], axis=1)
+def x():
+    dummies = pd.get_dummies(data_set[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
+    num = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','SITUACAO'], axis=1)
+    return pd.concat([dummies, num], axis=1)
+x = x()
 
 #Inserindo no mongoDB
-
-data_set = data_set.drop('SITUACAO', axis=1)
-data_set = data_set.to_dict(orient='records')
-clientes.insert_many(data_set)
-data = pd.DataFrame(clientes.find())
-
+def populando_banco():
+    data_set_banco = data_set.drop('SITUACAO', axis=1)
+    data_set_banco = data_set_banco.to_dict(orient='records')
+    clientes.insert_many(data_set_banco)
+    inserindo_situacao()
+    
+    
 def inserindo_situacao():
     ids_lista = clientes.distinct('_id')
     
@@ -172,5 +179,37 @@ def busca():
 @app.route('/')
 def home() :
     return "Api para projeto 2"
+
+@app.route('/adicionar/', methods=['POST'])
+def adicionar_pred():
+    mod1 = rf()
+    mod2 = lr()
+    mod3 = mlp()
+    req = request.get_json()
+    input = [req[col] for col in colunas]
+    pessoa = clientes.insert_one({
+        'CODIGO_FORMA_PGTO_MENSALIDADE' : input[0],
+        'DIAS_ATE_REALIZAR_ALTO_CUSTO' : input[1],
+        'ESTADO_CIVIL' : input[2],
+        'IDADE' : input[3],
+        'PREVISOES' : [],
+        'NUM_BENEFICIARIOS_FAMILIA' : input[4],
+        'PLANO' : input[5],
+        'QTDE_ATO_COBERTO_EXECUTADO' : input[6],
+        'QTDE_DIAS_ATIVO' : input[7],
+        'REALIZOU_PROCEDIMEN_ALTO_CUSTO' : input[8],
+        'SEXO' : input[9]
+    })
+    
+    input = pd.DataFrame()
+    input = pd.get_dummies(input)
+    
+    clientes.find_one_and_update({pessoa}, {
+        '$push' : {
+            'PREVISOES' : [mod1.predict(input), mod2.predict(input),mod3.predict(input)]
+        }
+    })
+    pessoa['_id'] = str(pessoa['_id'])
+    return jsonify(pessoa)
 
 app.run(debug=True)
