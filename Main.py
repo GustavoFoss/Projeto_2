@@ -56,7 +56,7 @@ x = x()
 
 def separando_x(data_set):
     dummy = pd.get_dummies(data_set[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
-    numeros = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','PREVISOES'], axis=1)
+    numeros = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE'], axis=1)
     return pd.concat([dummy, numeros], axis=1)
 
 #Inserindo no mongoDB
@@ -170,9 +170,8 @@ def clustering():
 
 def main():
     print("Iniciando...")
+    populando_banco()
     print("Concluido com sucesso!")
-
-main()
 
 
 @app.route('/busca/', methods=['POST'])
@@ -186,6 +185,10 @@ def busca():
     pessoa["_id"] = str(pessoa["_id"])
     return jsonify(previsoes = pessoa["PREVISOES"])
 
+@app.route('/popular/')
+def popular():
+    main()
+    return "MongoDB populado"
 
 @app.route('/')
 def home() :
@@ -229,20 +232,23 @@ def adicionar_pred():
     })
     
     data = pd.DataFrame(list(clientes.find()))
-    data = data.drop("_id", axis=1)
+    data = data.drop(["_id","PREVISOES"], axis=1)
     data = list(separando_x(data).iloc[-1])
-    data.extend((np.zeros(34)))
+    print(data)
     pred1 = mod1.predict([data])
     pred2 = mod2.predict([data])
     pred3 = mod3.predict([data])
     resultados = [int(pred1[0]),int(pred2[0]),int(pred3[0])]
+    print(resultados)
     clientes.find_one_and_update({"_id" : ObjectId(pessoa['_id'])}, {
        '$push' : {
           'PREVISOES' : {'$each' : resultados }
        }
     })
     
-    return jsonify(pessoa_adicionada = str(pessoa["_id"]))
+    return jsonify(pessoa_adicionada = str(pessoa["_id"]),
+                    previsoes_dela = resultados
+                   )
 
 app.run(debug=True)
 
