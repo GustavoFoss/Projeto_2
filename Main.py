@@ -18,6 +18,7 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import cross_validate
 from sklearn.model_selection import StratifiedKFold
 from flask import Flask,request,jsonify
+import pickle
 import warnings
 
 from visions import Object
@@ -174,6 +175,24 @@ def main():
     print("Concluido com sucesso!")
 
 
+def mod_download():
+    pickle.dump(rf(), open('rf.sav', 'wb'))
+    pickle.dump(lr(), open('lr.sav', 'wb'))
+    pickle.dump(mlp(), open('mlp.sav', 'wb'))
+
+
+def ler_rf():
+    return pickle.load(open('rf.sav', 'rb'))
+
+
+def ler_lr():
+    return pickle.load(open('lr.sav', 'rb'))
+
+
+def ler_mlp():
+    return pickle.load(open('mlp.sav', 'rb'))
+
+
 @app.route('/busca/', methods=['POST'])
 def busca():
     req = request.get_json()
@@ -185,10 +204,12 @@ def busca():
     pessoa["_id"] = str(pessoa["_id"])
     return jsonify(previsoes = pessoa["PREVISOES"])
 
+
 @app.route('/popular/')
 def popular():
     main()
     return "MongoDB populado"
+
 
 @app.route('/')
 def home() :
@@ -198,9 +219,9 @@ def home() :
 @app.route('/adicionar/', methods=['POST'])
 def adicionar_pred():
     print("Adicionando...")
-    mod1 = rf()
-    mod2 = lr()
-    mod3 = mlp()
+    mod1 = ler_rf()
+    mod2 = ler_lr()
+    mod3 = ler_mlp()
     req = request.get_json()
     input = [req[col] for col in colunas]
     pessoa = clientes.insert_one({
@@ -234,7 +255,6 @@ def adicionar_pred():
     data = pd.DataFrame(list(clientes.find()))
     data = data.drop(["_id","PREVISOES"], axis=1)
     data = list(separando_x(data).iloc[-1])
-    print(data)
     pred1 = mod1.predict([data])
     pred2 = mod2.predict([data])
     pred3 = mod3.predict([data])
