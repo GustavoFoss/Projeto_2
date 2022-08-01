@@ -1,13 +1,8 @@
 # Projeto_2
 
-# Requisitos
+# Projeto
 
-#####  PyMongo
-#####  MongoDb
-#####  Flask
-#####  Pandas
-#####  Bson
-#####  numpy
+#####Projeto para a segunda fase do programa de Trainee Wise sendo um complemento do projeto 1 transformando ele em uma Api consumivel.
 
 # Como utilizar
 
