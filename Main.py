@@ -45,7 +45,6 @@ def y():
     }
     y =  y.replace(dici_trad)
     return pd.Series(y)
-y = y()
 
 #Pegando o X
 
@@ -53,12 +52,13 @@ def x():
     dummies = pd.get_dummies(data_set[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
     num = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','SITUACAO'], axis=1)
     return pd.concat([dummies, num], axis=1)
-x = x()
+
 
 def separando_x(data_set):
     dummy = pd.get_dummies(data_set[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
     numeros = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE'], axis=1)
     return pd.concat([dummy, numeros], axis=1)
+
 
 #Inserindo no mongoDB
 def populando_banco():
@@ -82,8 +82,9 @@ def inserindo_situacao():
     
 
 ### TREINO E TESTE DOS MODELOS ###
-
-x_treino,x_teste,y_treino,y_teste = train_test_split(x, y, test_size=0.3, stratify=y)
+def separando_treino_teste():
+    x_treino,x_teste,y_treino,y_teste = train_test_split(x, y, test_size=0.3, stratify=y)
+    return x_treino,x_teste,y_treino,y_teste
 
 def view_score(y_teste, p, mod) :
     baseline = np.ones(p.shape)
