@@ -86,6 +86,7 @@ def separando_treino_teste():
     x_treino,x_teste,y_treino,y_teste = train_test_split(x, y, test_size=0.3, stratify=y)
     return x_treino,x_teste,y_treino,y_teste
 
+
 def view_score(y_teste, p, mod) :
     baseline = np.ones(p.shape)
 
@@ -125,6 +126,7 @@ def modelos_banco(mod) :
     model.insert_one({
         'MODELO' : str(mod.__class__)  
         })
+
 
 def rf():
     print("Random Forest Classifier")
