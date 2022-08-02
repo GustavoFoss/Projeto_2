@@ -45,13 +45,14 @@ def y():
     }
     y =  y.replace(dici_trad)
     return pd.Series(y)
-
+y = y()
 #Pegando o X
 
 def x():
     dummies = pd.get_dummies(data_set[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
     num = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','SITUACAO'], axis=1)
     return pd.concat([dummies, num], axis=1)
+x = x()
 
 
 def separando_x(data_set):
@@ -81,12 +82,7 @@ def inserindo_situacao():
             '$push' : {'PREVISOES' : i}
         })
     
-
-### TREINO E TESTE DOS MODELOS ###
-def separando_treino_teste():
-    x_treino,x_teste,y_treino,y_teste = train_test_split(x, y, test_size=0.3, stratify=y)
-    return x_treino,x_teste,y_treino,y_teste
-
+x_treino,x_teste,y_treino,y_teste = train_test_split(x, y, test_size=0.3, stratify=y)
 
 def view_score(y_teste, p, mod) :
     baseline = np.ones(p.shape)
@@ -121,32 +117,39 @@ def cross_validation(x, y, modelo):
     desvio = results.test_score.std()
     print("Média Teste: %.2f" %(media),"%")
     print("Entre : [%.2f, %.2f]" %((media - 2 * desvio), (media + 2 * desvio)),"%")
+    return results
     
     
 def modelos_banco(mod) :
+    cross_v = cross_validation(x, y, mod)
+    cross_v.
+    print(cross_v)
+    
     model.insert_one({
-        'MODELO' : str(mod.__class__)  
+        'MODELO' : str(mod.__class__),
+        'CROSS_V_ACERT' : cross_v.test_score.mean() * 100,
+        'DESVIO' : cross_v.test_score.std()
         })
 
 
 def rf():
     print("Random Forest Classifier")
     rf = RandomForestClassifier(max_depth=3, n_estimators=10)
-    #rf.fit(x_treino, y_treino)
+    rf.fit(x_treino, y_treino)
     return rf
     
     
 def lr():
     print("Logistic Regression")
     lr = LogisticRegression(max_iter=50)
-    #lr.fit(x_treino,y_treino)
+    lr.fit(x_treino,y_treino)
     return lr
     
     
 def mlp():
     print("MLP Classifier")
     mlp = MLPClassifier(max_iter=3)
-    #mlp.fit(x_treino,y_treino)
+    mlp.fit(x_treino,y_treino)
     return mlp
 
 
@@ -322,4 +325,3 @@ def add_modelos_ao_banco():
     
     
 app.run(debug=True)
-
