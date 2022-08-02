@@ -216,14 +216,14 @@ def prob_lista(num_registers):
     respostas = list(respostas)
     
     for i in respostas:
-        if (max(i) > 0 and max(i) <= 0.25):
-            prim_faixa.append(max(i))
-        elif (max(i) > 0.25 and max(i) <= 0.5):
-            seg_faixa.append(max(i))
-        elif (max(i) > 0.5 and max(i) <= 0.75):
+        if (i.mean() > 0 and i.mean() <= 0.25):
+            prim_faixa.append(i.mean())
+        elif (i.mean() > 0.25 and i.mean() <= 0.5):
+            seg_faixa.append(i.mean())
+        elif (i.mean() > 0.5 and i.mean() <= 0.75):
             terc_faixa.append(max(i))  
-        elif (max(i) > 0.75 and max(i) <= 1.0):
-            seg_faixa.append(max(i))
+        elif (i.mean() > 0.75 and i.mean() <= 1.0):
+            seg_faixa.append(i.mean())
     
     return jsonify(
         de_0_a_25 = len(prim_faixa),
