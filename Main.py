@@ -70,12 +70,13 @@ def populando_banco():
     
 def inserindo_situacao():
     ids_lista = clientes.distinct('_id')
+    resp = y()
     
     clientes.update_many({}, {
         '$set' : {'PREVISOES' : []}
     })
     
-    for (i,j) in zip(y.to_list(), ids_lista):
+    for (i,j) in zip(resp.to_list(), ids_lista):
         clientes.update_one({'_id' : j}, {
             '$push' : {'PREVISOES' : i}
         })
@@ -131,28 +132,22 @@ def modelos_banco(mod) :
 def rf():
     print("Random Forest Classifier")
     rf = RandomForestClassifier(max_depth=3, n_estimators=10)
-    rf.fit(x_treino, y_treino)
+    #rf.fit(x_treino, y_treino)
     return rf
     
     
 def lr():
     print("Logistic Regression")
     lr = LogisticRegression(max_iter=50)
-    lr.fit(x_treino,y_treino)
+    #lr.fit(x_treino,y_treino)
     return lr
     
     
 def mlp():
     print("MLP Classifier")
     mlp = MLPClassifier(max_iter=3)
-    mlp.fit(x_treino,y_treino)
+    #mlp.fit(x_treino,y_treino)
     return mlp
-
-
-def add_modelos_ao_banco():
-    modelos_banco(rf())
-    modelos_banco(lr())
-    modelos_banco(mlp())
 
 
 def clustering():
@@ -195,6 +190,47 @@ def ler_lr():
 def ler_mlp():
     return pickle.load(open('mlp.sav', 'rb'))
 
+
+@app.route('/probs/<num_registers>')
+def prob_lista(num_registers):
+    predi_prob1 = ler_rf()
+    predi_prob2 = ler_lr()
+    predi_prob3 = ler_mlp()
+    
+    prim_faixa = []
+    seg_faixa = []
+    terc_faixa = []
+    quar_faixa = []
+    
+    registros = pd.DataFrame(clientes.find())
+    registros = registros.drop(["_id","PREVISOES"], axis=1)
+    registros = separando_x(registros)
+        
+    probabilidades1 = predi_prob1.predict_proba(registros[:int(num_registers)])
+    probabilidades2 = predi_prob2.predict_proba(registros[:int(num_registers)])
+    probabilidades3 = predi_prob3.predict_proba(registros[:int(num_registers)])
+    
+    respostas = np.concatenate((probabilidades1,probabilidades2,probabilidades3))
+    
+    respostas = list(respostas)
+    
+    for i in respostas:
+        if (max(i) > 0 and max(i) <= 0.25):
+            prim_faixa.append(max(i))
+        elif (max(i) > 0.25 and max(i) <= 0.5):
+            seg_faixa.append(max(i))
+        elif (max(i) > 0.5 and max(i) <= 0.75):
+            terc_faixa.append(max(i))  
+        elif (max(i) > 0.75 and max(i) <= 1.0):
+            seg_faixa.append(max(i))
+    
+    return jsonify(
+        de_0_a_25 = len(prim_faixa),
+        de_25_a_50 = len(seg_faixa),
+        de_50_a_75 =  len(terc_faixa),
+        de_75_a_100 = len(quar_faixa)
+    )
+    
 
 @app.route('/busca/', methods=['POST'])
 def busca():
@@ -273,5 +309,17 @@ def adicionar_pred():
                     previsoes_dela = resultados
                    )
 
+
+@app.route('/modelos/')
+def add_modelos_ao_banco():
+    modelos_banco(ler_lr())
+    modelos_banco(ler_rf())
+    modelos_banco(ler_mlp())
+    
+    return jsonify(
+        resposta = "Adicionado com sucesso os modelos ao banco!"
+    )
+    
+    
 app.run(debug=True)
 
