@@ -122,8 +122,6 @@ def cross_validation(x, y, modelo):
     
 def modelos_banco(mod) :
     cross_v = cross_validation(x, y, mod)
-    cross_v.
-    print(cross_v)
     
     model.insert_one({
         'MODELO' : str(mod.__class__),
