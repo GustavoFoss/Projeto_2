@@ -26,12 +26,12 @@ Projeto para a segunda fase do programa de Trainee Wise sendo um complemento do 
         "DIAS_ATE_REALIZAR_ALTO_CUSTO" : "31-60",
         "ESTADO_CIVIL" : "solteiro",
         "IDADE" : 40.0,
-       "NUM_BENEFICIARIOS_FAMILIA" : 2.0,
-       "PLANO" : "408875991",
+        "NUM_BENEFICIARIOS_FAMILIA" : 2.0,
+        "PLANO" : "408875991",
         "QTDE_ATO_COBERTO_EXECUTADO" : 20.0,
-       "QTDE_DIAS_ATIVO" : 654.0,
-       "REALIZOU_PROCEDIMEN_ALTO_CUSTO" : "SIM",
-       "SEXO" : "M"
+        "QTDE_DIAS_ATIVO" : 654.0,
+        "REALIZOU_PROCEDIMEN_ALTO_CUSTO" : "SIM",
+        "SEXO" : "M"
        }
  ####   }
  
