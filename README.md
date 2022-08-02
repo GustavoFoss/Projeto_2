@@ -8,7 +8,7 @@ Projeto para a segunda fase do programa de Trainee Wise sendo um complemento do 
 
  #### Preferivel utilizar o POSTMAN PARA FAZER AS FUNCIONALIDADES ABAIXO
 
-#### 1 Passo - Execute o script ele vai na port 5000
+#### 1 Passo - Execute o script ele vai abir na port 5000
 
 #### 2 Passo - Se preferir utilizando o postman teste se esta funcionando com http://127.0.0.1:5000/
 
