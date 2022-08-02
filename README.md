@@ -4,7 +4,9 @@
 
 Projeto para a segunda fase do programa de Trainee Wise sendo um complemento do projeto 1 transformando ele em uma Api consumivel.
 
-# Como utilizar
+# Como utilizar 
+
+ #### Preferivel utilizar o POSTMAN PARA FAZER AS FUNCIONALIDADES ABAIXO
 
 #### 1 Passo - Execute o script ele vai na port 5000
 
@@ -19,6 +21,7 @@ Projeto para a segunda fase do programa de Trainee Wise sendo um complemento do 
 #### 6 Passo - Add o seu cliente com o http://127.0.0.1:5000/adicionar/ mas tem que enviar um objeto do tipo json como :
 
 #### {
+       {
         "CODIGO_FORMA_PGTO_MENSALIDADE" : "B",
         "DIAS_ATE_REALIZAR_ALTO_CUSTO" : "31-60",
         "ESTADO_CIVIL" : "solteiro",
@@ -29,4 +32,18 @@ Projeto para a segunda fase do programa de Trainee Wise sendo um complemento do 
        "QTDE_DIAS_ATIVO" : 654.0,
        "REALIZOU_PROCEDIMEN_ALTO_CUSTO" : "SIM",
        "SEXO" : "M"
+       }
  ####   }
+ 
+
+ 
+ #### 7 Passo - para buscar alguem no banco e suas previsoes precisará colocar o seu Id num objeto json tambem dessa forma 
+ 
+ #### {
+        {
+           "_id" : "62e33228baabde8e66fc414a"
+        }
+#### }
+
+
+
