@@ -1,7 +1,3 @@
-from multiprocessing.dummy import DummyProcess
-from multiprocessing.sharedctypes import Value
-from optparse import Values
-from pydoc import cli
 import pandas as pd
 from bson import ObjectId
 from sklearn.cluster import KMeans
@@ -20,8 +16,6 @@ from sklearn.model_selection import StratifiedKFold
 from flask import Flask,request,jsonify
 import pickle
 import warnings
-
-from visions import Object
 
 app = Flask(__name__)
 
