@@ -65,7 +65,7 @@ def populando_banco():
     
 def inserindo_situacao():
     ids_lista = clientes.distinct('_id')
-    resp = y()
+    resp = y
     
     clientes.update_many({}, {
         '$set' : {'PREVISOES' : []}
@@ -161,13 +161,6 @@ def clustering():
     descp['CLIENTES'] = clus['CLUSTER'].value_counts()
     print(descp)
     
-
-def main():
-    print("Iniciando...")
-    populando_banco()
-    print("Concluido com sucesso!")
-
-
 def mod_download():
     pickle.dump(rf(), open('rf.sav', 'wb'))
     pickle.dump(lr(), open('lr.sav', 'wb'))
@@ -241,7 +234,7 @@ def busca():
 
 @app.route('/popular/')
 def popular():
-    main()
+    populando_banco()
     return "MongoDB populado"
 
 
