@@ -16,6 +16,7 @@ from sklearn.model_selection import StratifiedKFold
 from flask import Flask,request,jsonify
 import pickle
 import warnings
+from random import randint
 
 app = Flask(__name__)
 
@@ -26,7 +27,7 @@ data_set = data_set.dropna()
 client = MongoClient("localhost", 27017)
 clientes = client.test.get_collection('CLIENTES')
 model = client.test.get_collection('MODELOS')
-data_set = data_set.drop(['CD_ASSOCIADO','CODIGO_BENEFICIARIO','REALIZOU_EXODONTIA_COBERTA','REALIZOU_ENDODONTIA_COBERTA', 'A006_REGISTRO_ANS','A006_NM_PLANO','CD_USUARIO','CLIENTE','FORMA_PGTO_MENSALIDADE','QTDE_ATO_N_COBERTO_EXECUTADO','QTDE_ATENDIMENTOS'], axis=1)
+data_set = data_set.drop(['CD_ASSOCIADO','REALIZOU_EXODONTIA_COBERTA','REALIZOU_ENDODONTIA_COBERTA', 'A006_REGISTRO_ANS','A006_NM_PLANO','CD_USUARIO','FORMA_PGTO_MENSALIDADE','QTDE_ATO_N_COBERTO_EXECUTADO','QTDE_ATENDIMENTOS','CODIGO_BENEFICIARIO'], axis=1)
 colunas = ['CODIGO_FORMA_PGTO_MENSALIDADE','DIAS_ATE_REALIZAR_ALTO_CUSTO','ESTADO_CIVIL','IDADE','NUM_BENEFICIARIOS_FAMILIA','PLANO','QTDE_ATO_COBERTO_EXECUTADO','QTDE_DIAS_ATIVO','REALIZOU_PROCEDIMEN_ALTO_CUSTO','SEXO']
 
 #Pegando o Y
@@ -40,18 +41,19 @@ def y():
     y =  y.replace(dici_trad)
     return pd.Series(y)
 y = y()
+
 #Pegando o X
 
 def x():
     dummies = pd.get_dummies(data_set[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
-    num = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','SITUACAO'], axis=1)
+    num = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','SITUACAO','CLIENTE'], axis=1)
     return pd.concat([dummies, num], axis=1)
 x = x()
 
 
 def separando_x(data_set):
     dummy = pd.get_dummies(data_set[['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE']])
-    numeros = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE'], axis=1)
+    numeros = data_set.drop(['SEXO','ESTADO_CIVIL','REALIZOU_PROCEDIMEN_ALTO_CUSTO','DIAS_ATE_REALIZAR_ALTO_CUSTO','PLANO','CODIGO_FORMA_PGTO_MENSALIDADE','CLIENTE'], axis=1)
     return pd.concat([dummy, numeros], axis=1)
 
 
@@ -161,6 +163,7 @@ def clustering():
     descp['CLIENTES'] = clus['CLUSTER'].value_counts()
     print(descp)
     
+    
 def mod_download():
     pickle.dump(rf(), open('rf.sav', 'wb'))
     pickle.dump(lr(), open('lr.sav', 'wb'))
@@ -223,12 +226,11 @@ def prob_lista(num_registers):
 @app.route('/busca/', methods=['POST'])
 def busca():
     req = request.get_json()
-    dado = req["_id"]
+    dado = req['CLIENTE']
     try :
-        pessoa = clientes.find_one({"_id" : ObjectId(dado)})
+        pessoa = clientes.find_one({'CLIENTE' : int(dado)})
     except :
-        return jsonify(nao_consegui_achar = str(dado))
-    pessoa["_id"] = str(pessoa["_id"])
+        return jsonify(nao_consegui_achar = int(dado))
     return jsonify(previsoes = pessoa["PREVISOES"])
 
 
@@ -251,7 +253,10 @@ def adicionar_pred():
     mod3 = ler_mlp()
     req = request.get_json()
     input = [req[col] for col in colunas]
+    cod_cliente = clientes.distinct('CLIENTE')
+    cod_cliente = max(cod_cliente) + 1
     pessoa = clientes.insert_one({
+        'CLIENTE' : cod_cliente,
         'CODIGO_FORMA_PGTO_MENSALIDADE' : input[0],
         'DIAS_ATE_REALIZAR_ALTO_CUSTO' : input[1],
         'ESTADO_CIVIL' : input[2],
@@ -266,6 +271,7 @@ def adicionar_pred():
     })
     
     pessoa = clientes.find_one({
+        'CLIENTE' : cod_cliente,
         'CODIGO_FORMA_PGTO_MENSALIDADE' : input[0],
         'DIAS_ATE_REALIZAR_ALTO_CUSTO' : input[1],
         'ESTADO_CIVIL' : input[2],
@@ -293,7 +299,7 @@ def adicionar_pred():
        }
     })
     
-    return jsonify(pessoa_adicionada = str(pessoa["_id"]),
+    return jsonify(pessoa_adicionada = str(pessoa["CLIENTE"]),
                     previsoes_dela = resultados
                    )
 
