@@ -37,11 +37,11 @@ Projeto para a segunda fase do programa de Trainee Wise sendo um complemento do 
  
 
  
- #### 7 Passo - para buscar alguem no banco e suas previsoes precisará colocar o seu Id num objeto json tambem dessa forma 
+ #### 7 Passo - para buscar alguem no banco e suas previsoes precisará colocar o seu codigo de cliente num objeto json tambem dessa forma 
  
  #### {
         {
-           "_id" : "62e33228baabde8e66fc414a"
+           "CLIENTE" : 401515
         }
 #### }
 
